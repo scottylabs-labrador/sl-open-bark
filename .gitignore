@@ -18,3 +18,5 @@ coverage.*
 .idea/
 .vscode/
 *.swp
+# Stray Go build artifact (build with -o /tmp/... instead of `go build .`)
+/infra/validate/validate
