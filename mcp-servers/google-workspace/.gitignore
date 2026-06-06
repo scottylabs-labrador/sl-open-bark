@@ -1,0 +1,16 @@
+# Binaries
+/server
+/out/
+bin/
+
+# Test and coverage
+*.out
+coverage.*
+
+# Env and secrets
+.env
+*.local
+
+# Editor
+.idea/
+.vscode/
