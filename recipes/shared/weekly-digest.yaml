@@ -1,0 +1,29 @@
+version: 1
+title: Weekly leadership digest
+description: >
+  A scheduled summary for ScottyLabs leadership (design 11.4): the week's volume, approvals,
+  returns, and model spend, posted to the leadership Slack channel. Read-only and informational; it
+  takes no irreversible action.
+owner: platform-team
+
+parameters:
+  - key: since
+    description: Start of the reporting window (RFC3339); defaults to 7 days ago
+    required: false
+
+extensions:
+  - gateway: memory.search
+
+instructions: |
+  Produce a concise weekly digest for leadership. Pull the week's activity from the platform's audit
+  trail and registry (the operations data, not student PII):
+
+  1. Volume — how many agent calls and tasks ran, by committee.
+  2. Approvals — how many high-impact actions were requested, approved, denied, or are still pending.
+  3. Returns — for finance, how many reimbursement requests were screened and the pass/fail/review
+     split; how many returns were sent after approval.
+  4. Spend — model usage and approximate cost for the window (from the OpenRouter spend signal).
+
+  Format as a short, scannable Slack message with one line per section and a headline. Post it to the
+  leadership channel. Do not include any student PII; report counts and aggregates only. This recipe
+  never sends mail, books, or moves money.
