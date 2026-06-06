@@ -3,8 +3,8 @@
 # finance/production-secret access.
 FROM golang:1.26 AS build
 WORKDIR /src
-COPY services/engineering-agent/go.mod services/engineering-agent/go.sum ./
-RUN go mod download
+# This module has no external dependencies (stdlib only), so there is no go.sum — copy the whole
+# module and build offline.
 COPY services/engineering-agent/ ./
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/engineering-agent ./cmd/engineering-agent
 
