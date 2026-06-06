@@ -35,6 +35,24 @@ jobs:
     name: check (${{ matrix.module }})
     needs: discover
     runs-on: ubuntu-latest
+    # A disposable Postgres for modules with database-backed tests (e.g. session-memory). Modules
+    # without DB tests ignore TEST_DATABASE_URL and skip cleanly.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sl_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/sl_test?sslmode=disable
     strategy:
       fail-fast: false
       matrix:
