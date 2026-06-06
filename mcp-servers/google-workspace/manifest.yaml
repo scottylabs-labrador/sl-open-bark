@@ -1,0 +1,36 @@
+# Registry manifest for the Google Workspace MCP. The gateway reads this to register the server,
+# enforce per-tool scope and impact, and decide which committees may use it. Read-first; the only
+# irreversible tool, gmail_send, is impact:high and requires human approval at the gateway.
+name: google.workspace
+owner: platform-team
+description: >
+  Google Workspace capability for the ScottyLabs agent: read Sheets, list and create Calendar
+  events, draft and send Gmail, and read Drive metadata, acting as the agent's scottylabs.org
+  account via a scoped service account with domain-wide delegation.
+
+endpoint: http://google-workspace.railway.internal:8080/mcp
+transport: streamable-http
+auth: bearer
+
+tools:
+  - name: sheets_read
+    scope: google.sheets.read
+    impact: read
+  - name: calendar_list
+    scope: google.calendar.read
+    impact: read
+  - name: calendar_create_event
+    scope: google.calendar.write
+    impact: write
+  - name: gmail_draft
+    scope: google.gmail.draft
+    impact: write
+  - name: gmail_send
+    scope: google.gmail.send
+    impact: high          # irreversible: requires human-in-the-loop at the gateway
+  - name: drive_read
+    scope: google.drive.read
+    impact: read
+
+allowed_committees: [finance, events, design, leadership]
+lifecycle: proposed
