@@ -1,0 +1,6 @@
+name: bad.server
+owner: platform-team
+endpoint: http://bad.railway.internal:8080/mcp
+tools:
+  - name: do_thing
+    impact: read
