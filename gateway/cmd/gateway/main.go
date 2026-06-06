@@ -18,6 +18,7 @@ import (
 	"os"
 
 	"github.com/scottylabs/scottylabs-agent/gateway/internal/config"
+	"github.com/scottylabs/scottylabs-agent/gateway/internal/limits"
 	"github.com/scottylabs/scottylabs-agent/gateway/internal/manifest"
 	"github.com/scottylabs/scottylabs-agent/gateway/internal/policy"
 	"github.com/scottylabs/scottylabs-agent/gateway/internal/proxy"
@@ -47,7 +48,9 @@ func main() {
 	}
 
 	repo := store.New(db)
-	gw := policy.New(repo, proxy.NewHTTPCaller(cfg.DownstreamToken))
+	limiter := limits.NewLimiter(cfg.RateCommitteePerMin, cfg.RateCommitteePerMin, cfg.RateGlobalPerMin, cfg.RateGlobalPerMin)
+	gw := policy.New(repo, proxy.NewHTTPCaller(cfg.DownstreamToken), policy.WithLimiter(limiter))
+	logger.Info("gateway: rate limits", "committee_per_min", cfg.RateCommitteePerMin, "global_per_min", cfg.RateGlobalPerMin)
 
 	if len(os.Args) > 1 && os.Args[1] == "sync" {
 		if err := syncRegistry(ctx, gw, cfg.RepoRoot, logger); err != nil {

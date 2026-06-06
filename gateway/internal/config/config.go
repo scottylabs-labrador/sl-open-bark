@@ -2,10 +2,17 @@
 // production these come from Railway secrets / the .env the platform assumes).
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 type Config struct {
 	Port string // HTTP port (Railway injects PORT)
+
+	// Rate limits (design 10.2): per-committee and global requests/minute. <= 0 disables a dimension.
+	RateCommitteePerMin int
+	RateGlobalPerMin    int
 
 	// ServiceToken is the bearer the deployed agent and the dashboard present to the gateway.
 	// Human callers authenticate via ContextForge's OAuth 2.1/PKCE in front of this service.
@@ -27,13 +34,24 @@ type Config struct {
 
 func Load() Config {
 	return Config{
-		Port:            firstNonEmpty(os.Getenv("PORT"), "8080"),
-		ServiceToken:    os.Getenv("GATEWAY_SERVICE_TOKEN"),
-		DatabaseURL:     os.Getenv("DATABASE_URL"),
-		ContextForgeURL: os.Getenv("CONTEXTFORGE_URL"),
-		DownstreamToken: os.Getenv("MCP_DOWNSTREAM_TOKEN"),
-		RepoRoot:        firstNonEmpty(os.Getenv("REPO_ROOT"), "."),
+		Port:                firstNonEmpty(os.Getenv("PORT"), "8080"),
+		ServiceToken:        os.Getenv("GATEWAY_SERVICE_TOKEN"),
+		DatabaseURL:         os.Getenv("DATABASE_URL"),
+		ContextForgeURL:     os.Getenv("CONTEXTFORGE_URL"),
+		DownstreamToken:     os.Getenv("MCP_DOWNSTREAM_TOKEN"),
+		RepoRoot:            firstNonEmpty(os.Getenv("REPO_ROOT"), "."),
+		RateCommitteePerMin: envInt("GATEWAY_RATE_COMMITTEE_PER_MIN", 120),
+		RateGlobalPerMin:    envInt("GATEWAY_RATE_GLOBAL_PER_MIN", 600),
 	}
+}
+
+func envInt(key string, def int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			return n
+		}
+	}
+	return def
 }
 
 func firstNonEmpty(values ...string) string {

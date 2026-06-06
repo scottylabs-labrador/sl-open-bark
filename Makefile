@@ -11,7 +11,7 @@ GOLANGCI_LINT ?= golangci-lint
 # Every directory containing a go.mod (i.e. every Go module).
 MODULES := $(shell find . -name go.mod -not -path './.git/*' -exec dirname {} \; | sort)
 
-.PHONY: help ci fmt fmt-check vet lint test test-race build validate tidy deploy
+.PHONY: help ci fmt fmt-check vet lint test test-race build validate checklist tidy deploy
 
 help:
 	@echo "ScottyLabs Agent Platform — make targets:"
@@ -30,7 +30,7 @@ help:
 	@echo "Modules:"
 	@for m in $(MODULES); do echo "  $$m"; done
 
-ci: fmt-check vet lint test validate
+ci: fmt-check vet lint test validate checklist
 
 fmt:
 	@for m in $(MODULES); do echo "==> gofmt -w $$m"; (cd $$m && gofmt -w .); done
@@ -66,6 +66,10 @@ build:
 validate:
 	@echo "==> validate manifests + recipes"
 	@cd infra/validate && $(GO) run . all "$(CURDIR)"
+
+checklist:
+	@echo "==> security checklist"
+	@cd infra/validate && $(GO) run . checklist "$(CURDIR)"
 
 tidy:
 	@for m in $(MODULES); do echo "==> go mod tidy $$m"; (cd $$m && $(GO) mod tidy) || exit 1; done

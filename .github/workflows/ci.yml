@@ -109,7 +109,7 @@ jobs:
         run: "$(go env GOPATH)/bin/golangci-lint run ./..."
 
   validate:
-    name: validate manifests + recipes
+    name: validate + security checklist
     needs: discover
     runs-on: ubuntu-latest
     steps:
@@ -118,6 +118,9 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: infra/validate/go.sum
-      - name: validate
+      - name: validate manifests + recipes
         working-directory: infra/validate
         run: go run . all "$GITHUB_WORKSPACE"
+      - name: security checklist
+        working-directory: infra/validate
+        run: go run . checklist "$GITHUB_WORKSPACE"

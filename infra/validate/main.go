@@ -43,6 +43,8 @@ func run(args []string) error {
 			return err
 		}
 		return checkRecipes(root)
+	case "checklist":
+		return checkSecurity(root)
 	case "-h", "--help", "help":
 		fmt.Println(usage)
 		return nil
@@ -50,6 +52,21 @@ func run(args []string) error {
 		fmt.Fprintln(os.Stderr, usage)
 		return fmt.Errorf("unknown command %q", kind)
 	}
+}
+
+func checkSecurity(root string) error {
+	problems, err := RunChecklist(root)
+	if err != nil {
+		return err
+	}
+	if len(problems) > 0 {
+		for _, p := range problems {
+			fmt.Fprintln(os.Stderr, "✗ "+p)
+		}
+		return fmt.Errorf("security checklist: %d problem(s)", len(problems))
+	}
+	fmt.Println("security checklist: passed")
+	return nil
 }
 
 func checkManifests(root string) error {
