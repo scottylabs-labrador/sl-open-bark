@@ -1,0 +1,27 @@
+# Registry manifest for the Memory MCP. Its implementation lives in
+# services/session-memory/cmd/memory-mcp/ (it shares the WP-01 Postgres store), but it registers
+# and is governed like any other capability. Per-user/-committee/-org scoped memory (design 4.4).
+name: memory
+owner: platform-team
+description: >
+  Scoped long-term memory for the ScottyLabs agent, backed by Postgres. write_fact and forget store
+  and remove durable facts; search retrieves top-k by tag and recency. Every read is scoped to a
+  (scope_type, scope_id), so one principal's context never surfaces for another.
+
+endpoint: http://memory.railway.internal:8080/mcp
+transport: streamable-http
+auth: bearer
+
+tools:
+  - name: write_fact
+    scope: memory.write
+    impact: write
+  - name: search
+    scope: memory.read
+    impact: read
+  - name: forget
+    scope: memory.write
+    impact: write
+
+allowed_committees: [finance, events, design, leadership]
+lifecycle: proposed

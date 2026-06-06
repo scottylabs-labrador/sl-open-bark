@@ -44,14 +44,26 @@ DATABASE_URL='postgres://…' AUDIT_RETENTION_DAYS=365 go run ./cmd/retention
 `AUDIT_RETENTION_DAYS` is policy (the retention window is an open question for leadership; design
 Section 14). No secrets in code — config comes from the environment.
 
-## What's next (WP-05)
+## Statefulness and context engineering (WP-05)
 
-Built on this store, WP-05 adds:
+Built on the store:
 
-- A **Memory MCP** (`memory.write_fact`, `memory.search`, `memory.forget`) exposing the scoped
-  repository to recipes like any other capability, backed by these tables.
-- The per-turn **context-assembly pipeline** that budgets context in priority order (system +
-  `.goosehints` + recipe + retrieved memory + rolling summary + recent turns + trimmed tool
-  output) and updates the rolling summary and durable facts after each turn.
+- **Memory MCP** (`cmd/memory-mcp`, `internal/memory`) — exposes scoped memory as MCP tools so
+  recipes can use it like any other capability: `write_fact` (write), `search` (read, scoped),
+  `forget` (write). Registry manifest at [`../../mcp-servers/memory/`](../../mcp-servers/memory/).
+  Every search is scoped to a `(scope_type, scope_id)`, so one principal's facts never surface for
+  another (enforced by the store).
+- **Context-assembly pipeline** (`internal/assembly`) — assembles each turn's context in priority
+  order (system + `.goosehints` + recipe + retrieved memory + rolling summary + recent turns +
+  trimmed tool output), stopping before a **token budget** is hit and trimming the lowest-priority
+  (tool-output) part rather than blowing the window. `Builder` pulls the scoped pieces from the
+  store; `Assemble` is pure and deterministic. `PersistTurnResult` writes back the updated rolling
+  summary and any new durable facts, so the agent gets smarter over time. The runtime (WP-06) drives
+  it and supplies the model for summarization.
+
+```
+internal/memory/     the Memory MCP tools over the store      cmd/memory-mcp/  its server
+internal/assembly/   budgeted, priority-ordered context assembly (pure) + the store-backed Builder
+```
 
 MCP servers stay stateless and idempotent; durable state lives here in Postgres, not in a server.
