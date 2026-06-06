@@ -53,7 +53,8 @@ func TestMain(m *testing.M) {
 func reset(t *testing.T) {
 	t.Helper()
 	_, err := testDB.Exec(`TRUNCATE users, committee_roles, sessions, turns, summaries,
-		memory_facts, approvals, audit_log RESTART IDENTITY CASCADE`)
+		memory_facts, approvals, audit_log, mcp_servers, mcp_tools, server_committees
+		RESTART IDENTITY CASCADE`)
 	if err != nil {
 		t.Fatalf("reset: %v", err)
 	}
