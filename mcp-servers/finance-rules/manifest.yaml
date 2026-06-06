@@ -1,0 +1,21 @@
+# Registry manifest for the Finance Rules MCP. A single deterministic, read-only tool that screens
+# reimbursement requests against reviewed standards (design 9.2). The model parses and explains; the
+# code decides — so the auto-return is auditable, consistent, and testable.
+name: finance.rules
+owner: finance-committee
+description: >
+  Deterministic "rules as code" screening for ScottyLabs reimbursement requests. evaluate returns
+  pass / fail (with the specific failed standards and evidence) / review (borderline, for a human),
+  from standards loaded out of a reviewed file. It never approves or rejects money.
+
+endpoint: http://finance-rules.railway.internal:8080/mcp
+transport: streamable-http
+auth: bearer
+
+tools:
+  - name: evaluate
+    scope: finance.read
+    impact: read
+
+allowed_committees: [finance, leadership]
+lifecycle: proposed
