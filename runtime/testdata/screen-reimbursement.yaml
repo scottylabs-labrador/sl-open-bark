@@ -1,0 +1,12 @@
+version: 1
+title: Screen reimbursement requests
+description: Evaluate reimbursement responses; never send without human approval.
+owner: finance-committee
+extensions:
+  - gateway: finance.rules.evaluate
+instructions: |
+  1. Read new responses from the reimbursement sheet.
+  2. Evaluate each against the finance standards.
+  3. Draft returns for clear failures; never send without approval.
+response:
+  require_human_approval_for: [google.gmail.send]
