@@ -1,0 +1,15 @@
+{
+  "_comment": "ScottyLabs reimbursement standards as DATA, reviewed and version-controlled (design 9.2). The deterministic checks in internal/domain read these; the human-readable policy lives in recipes/finance/standards/. Change requires finance-committee review.",
+  "eligible_categories": ["travel", "food", "supplies", "swag", "printing"],
+  "category_caps_usd": {
+    "travel": 500,
+    "food": 250,
+    "supplies": 300,
+    "swag": 400,
+    "printing": 150
+  },
+  "max_days_to_submit": 30,
+  "require_receipt": true,
+  "require_event_assoc": true,
+  "review_band": 0.10
+}
