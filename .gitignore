@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Secrets and local env — NEVER commit real credentials (Railway secrets hold these in prod)
+.env
+.env.*
+!.env.example
+*.local
+
+# Go build output and coverage
+/bin/
+/out/
+*.out
+coverage.*
+*.test
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,24 @@
+# Registry manifest. The MCP gateway reads this to register the server, enforce per-tool scopes
+# and impact, and decide which committees may use it. Keep it in sync with the tools.
+name: scottylabs.example
+owner: platform-team           # committee + maintainer responsible for this server
+description: >
+  Example ScottyLabs MCP capability (reimbursement evaluation), written in Go. Use as the template
+  for new servers: copy it, rename the module, and replace the tools.
+
+# Path A (official, in the monorepo): the gateway reaches the server over Railway's private
+# network. Path B (community): replace with the server's public Railway URL.
+endpoint: http://example.railway.internal:8080/mcp
+transport: streamable-http
+auth: bearer                   # the gateway presents MCP_AUTH_TOKEN
+
+tools:
+  - name: evaluate_reimbursement
+    scope: finance.read
+    impact: read               # read | write | high (high requires gateway human-in-the-loop)
+  - name: record_review_decision
+    scope: finance.write
+    impact: write
+
+allowed_committees: [finance, leadership]
+lifecycle: proposed            # proposed -> approved (a maintainer promotes after a live check)
