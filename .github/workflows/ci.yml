@@ -1,0 +1,99 @@
+name: CI
+
+# Format, vet, lint, test every Go module, and validate the registry manifests and recipes against
+# their JSON Schemas. The module list is discovered at runtime, so adding an MCP server or service
+# (a new go.mod) is covered automatically with no edits to this file.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.26"
+  GOLANGCI_LINT_VERSION: "v2.12.2"
+
+jobs:
+  discover:
+    name: discover modules
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.set.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set
+        run: |
+          mods=$(find . -name go.mod -not -path './.git/*' -exec dirname {} \; \
+            | sed 's|^\./||' | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "modules=$mods" >> "$GITHUB_OUTPUT"
+          echo "Discovered modules: $mods"
+
+  check:
+    name: check (${{ matrix.module }})
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJson(needs.discover.outputs.modules) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: ${{ matrix.module }}/go.sum
+      - name: gofmt
+        run: |
+          out=$(gofmt -l .)
+          if [ -n "$out" ]; then
+            echo "::error::files need gofmt:"; echo "$out"; exit 1
+          fi
+          echo "gofmt: clean"
+      - name: go vet
+        run: go vet ./...
+      - name: go build
+        run: go build ./...
+      - name: go test (race)
+        run: go test -race ./...
+
+  lint:
+    name: lint (${{ matrix.module }})
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJson(needs.discover.outputs.modules) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: ${{ matrix.module }}/go.sum
+      - name: install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
+            | sh -s -- -b "$(go env GOPATH)/bin" "${GOLANGCI_LINT_VERSION}"
+      - name: golangci-lint
+        working-directory: ${{ matrix.module }}
+        run: "$(go env GOPATH)/bin/golangci-lint run ./..."
+
+  validate:
+    name: validate manifests + recipes
+    needs: discover
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: infra/validate/go.sum
+      - name: validate
+        working-directory: infra/validate
+        run: go run . all "$GITHUB_WORKSPACE"

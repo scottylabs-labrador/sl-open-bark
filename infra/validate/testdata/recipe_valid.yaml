@@ -1,0 +1,26 @@
+version: 1
+title: Screen reimbursement requests
+description: >
+  Evaluate new reimbursement form responses against ScottyLabs finance
+  standards. Auto-draft returns for clear failures, recommend on edge cases,
+  never send without human approval.
+owner: finance-committee
+parameters:
+  - key: since
+    description: Only process responses submitted after this timestamp
+    required: false
+extensions:
+  - gateway: google.sheets.read
+  - gateway: google.gmail.draft
+  - gateway: finance.rules.evaluate
+instructions: |
+  1. Read new responses from the reimbursement sheet (use 'since' if given).
+  2. For each response, call finance.rules.evaluate to get pass / fail / review
+     with the specific failed standards.
+  3. For clear failures: draft a return email that names the exact standard
+     and how to fix it. Draft only. Do not send.
+  4. For edge cases: write a one-line recommendation for a human.
+  5. Post a summary to the finance Slack thread with an approval block.
+  6. Only send drafted returns after a human approves.
+response:
+  require_human_approval_for: [google.gmail.send]

@@ -1,0 +1,24 @@
+# Optional local pre-commit hooks (https://pre-commit.com). Install with `pre-commit install`.
+# These mirror CI so problems are caught before a push. They are a convenience, not the gate —
+# CI is the source of truth.
+repos:
+  - repo: local
+    hooks:
+      - id: gofmt
+        name: gofmt (all modules)
+        entry: make fmt-check
+        language: system
+        pass_filenames: false
+        types: [go]
+      - id: go-vet
+        name: go vet (all modules)
+        entry: make vet
+        language: system
+        pass_filenames: false
+        types: [go]
+      - id: validate
+        name: validate manifests + recipes
+        entry: make validate
+        language: system
+        pass_filenames: false
+        files: '(manifest\.yaml|\.ya?ml|\.schema\.json)$'

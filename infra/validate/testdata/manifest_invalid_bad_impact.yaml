@@ -1,0 +1,9 @@
+# Invalid: impact "danger" is not one of read | write | high.
+name: events.booking
+owner: events-committee
+description: Create and manage ScottyLabs event bookings.
+endpoint: http://events-booking.railway.internal:8080/mcp
+tools:
+  - name: submit_booking
+    scope: events.write
+    impact: danger

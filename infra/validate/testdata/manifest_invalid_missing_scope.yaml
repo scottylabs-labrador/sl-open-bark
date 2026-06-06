@@ -1,0 +1,12 @@
+# Invalid: the second tool declares no scope. A tool with no scope must be rejected
+# (fail closed — design Section 10.3).
+name: events.booking
+owner: events-committee
+description: Create and manage ScottyLabs event bookings.
+endpoint: http://events-booking.railway.internal:8080/mcp
+tools:
+  - name: check_availability
+    scope: events.read
+    impact: read
+  - name: submit_booking
+    impact: high

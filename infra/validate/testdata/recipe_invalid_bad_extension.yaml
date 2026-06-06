@@ -1,0 +1,9 @@
+# Invalid: an extension entry must name a gateway capability; this one uses the wrong key.
+version: 1
+title: Broken recipe
+description: An extension without a gateway capability id.
+owner: finance-committee
+extensions:
+  - tool: google.sheets.read
+instructions: |
+  Do something.

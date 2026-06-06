@@ -1,0 +1,40 @@
+# CODEOWNERS — per-committee ownership of the monorepo.
+#
+# CODEOWNERS makes each committee responsible for its own recipes and servers, which is how the
+# catalog stays honest as members rotate (design Section 7.5, Section 14). A capability (MCP server)
+# change grants new power, so it requires BOTH the owning committee and a platform maintainer.
+#
+# NOTE: the referenced GitHub teams must exist in the ScottyLabs org for auto-review-request to
+# work (creating the org/teams is a human-gated step). Until then these lines are inert but correct.
+
+# Default: the platform team owns anything not claimed below.
+*                                   @scottylabs/platform-team
+
+# Core platform seams — platform maintainers own these regardless of committee.
+/CLAUDE.md                          @scottylabs/platform-team
+/BUILD-PLAYBOOK.md                  @scottylabs/platform-team
+/.github/                           @scottylabs/platform-team
+/Makefile                           @scottylabs/platform-team
+/runtime/                           @scottylabs/platform-team
+/gateway/                           @scottylabs/platform-team
+/services/                          @scottylabs/platform-team
+/infra/                             @scottylabs/platform-team
+/docs/                              @scottylabs/platform-team
+/mcp-servers/_template/             @scottylabs/platform-team
+/mcp-servers/manifest.schema.json   @scottylabs/platform-team
+/recipes/recipe.schema.json         @scottylabs/platform-team
+
+# Workflows (recipes): the committee owns its own area. Light review — no new access granted.
+/recipes/finance/                   @scottylabs/finance-committee
+/recipes/events/                    @scottylabs/events-committee
+/recipes/design/                    @scottylabs/design-committee
+/recipes/shared/                    @scottylabs/platform-team
+
+# Capabilities (MCP servers): committee + a platform maintainer (new power → stricter review).
+/mcp-servers/finance-rules/         @scottylabs/finance-committee @scottylabs/platform-team
+/mcp-servers/events-booking/        @scottylabs/events-committee @scottylabs/platform-team
+/mcp-servers/design-standards/      @scottylabs/design-committee @scottylabs/platform-team
+/mcp-servers/memory/                @scottylabs/platform-team
+
+# The Engineering Agent is an isolated trust domain — platform maintainers only.
+/services/engineering-agent/        @scottylabs/platform-team
