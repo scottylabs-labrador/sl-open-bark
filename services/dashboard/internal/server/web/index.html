@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ScottyLabs · Agent Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- Login gate -->
+<div id="login" class="login hidden">
+  <div class="login-card">
+    <div class="login-mark">◢◤ SCOTTYLABS</div>
+    <h1>AGENT&nbsp;OPS<span class="cursor"></span></h1>
+    <p class="login-sub">Maintainer access required.</p>
+    <form id="login-form">
+      <input id="login-token" type="password" placeholder="ACCESS TOKEN" autocomplete="off" spellcheck="false" />
+      <button type="submit">AUTHENTICATE →</button>
+    </form>
+    <p id="login-err" class="login-err"></p>
+  </div>
+</div>
+
+<!-- App shell -->
+<div id="app" class="app hidden">
+  <header class="statusbar">
+    <div class="sb-left">
+      <span class="logo">◢◤</span>
+      <span class="logo-text">SCOTTYLABS<span class="logo-sub">/ AGENT&nbsp;OPS</span></span>
+    </div>
+    <div class="sb-center">
+      <span id="sys-status" class="sys ok"><i class="dot"></i> SYSTEM NOMINAL</span>
+    </div>
+    <div class="sb-right">
+      <span class="kv"><b>DB</b><i id="db-dot" class="dot ok"></i></span>
+      <span class="kv"><b>RUNTIME</b><i id="rt-dot" class="dot"></i></span>
+      <span id="clock" class="clock">--:--:--</span>
+      <span id="devbadge" class="devbadge hidden">DEV</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="rail">
+      <button class="nav active" data-view="overview"><span class="gly">▣</span> OVERVIEW</button>
+      <button class="nav" data-view="registry"><span class="gly">⬡</span> REGISTRY</button>
+      <button class="nav" data-view="approvals"><span class="gly">⚑</span> APPROVALS <span id="rail-appr" class="badge hidden">0</span></button>
+      <button class="nav" data-view="audit"><span class="gly">≣</span> AUDIT</button>
+      <button class="nav console-nav" data-view="console"><span class="gly">❯</span> CONSOLE</button>
+      <div class="rail-foot">
+        <div class="rail-org">ScottyLabs · Carnegie&nbsp;Mellon</div>
+        <div class="rail-ver">build · agent-platform</div>
+      </div>
+    </nav>
+
+    <main class="main">
+      <!-- OVERVIEW -->
+      <section class="view active" id="view-overview">
+        <div class="view-head">
+          <h2>OVERVIEW</h2>
+          <span class="view-sub">live telemetry · the capability bus at a glance</span>
+        </div>
+        <div class="telemetry" id="telemetry"></div>
+        <div class="ov-grid">
+          <div class="panel">
+            <div class="panel-head"><h3>SYSTEM STATUS</h3><span class="muted">fail-closed defaults</span></div>
+            <div id="sysgrid" class="sysgrid"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>RECENT ACTIVITY</h3><span class="muted">audit_log</span></div>
+            <div id="ov-audit" class="ministream"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REGISTRY -->
+      <section class="view" id="view-registry">
+        <div class="view-head">
+          <h2>REGISTRY</h2>
+          <span class="view-sub">MCP servers · scopes · lifecycle. Promote <code>proposed → approved</code> to go live.</span>
+        </div>
+        <div id="registry" class="registry"></div>
+      </section>
+
+      <!-- APPROVALS -->
+      <section class="view" id="view-approvals">
+        <div class="view-head">
+          <h2>APPROVALS</h2>
+          <span class="view-sub">human-in-the-loop · high-impact actions wait here</span>
+        </div>
+        <div id="approvals" class="approvals"></div>
+      </section>
+
+      <!-- AUDIT -->
+      <section class="view" id="view-audit">
+        <div class="view-head">
+          <h2>AUDIT&nbsp;LOG</h2>
+          <span class="view-sub">every side effect · actor · tool · result · latency</span>
+        </div>
+        <div class="logwrap">
+          <div class="logcols"><span>TIME</span><span>ACTOR</span><span>TOOL</span><span>RESULT</span><span>ms</span></div>
+          <div id="audit" class="log"></div>
+        </div>
+      </section>
+
+      <!-- CONSOLE -->
+      <section class="view" id="view-console">
+        <div class="view-head">
+          <h2>AGENT&nbsp;CONSOLE</h2>
+          <span class="view-sub">submit a task · watch the agent reason and act · approve in-line</span>
+        </div>
+        <div class="console">
+          <div class="composer panel">
+            <div class="panel-head"><h3>NEW&nbsp;TASK</h3></div>
+            <div class="field">
+              <label>MODE</label>
+              <div class="seg">
+                <button id="mode-goal" class="seg-on">INLINE GOAL</button>
+                <button id="mode-recipe">RECIPE</button>
+              </div>
+            </div>
+            <div class="field" id="f-goal">
+              <label>GOAL</label>
+              <textarea id="in-goal" rows="3" placeholder="screen the latest reimbursement requests"></textarea>
+            </div>
+            <div class="field hidden" id="f-recipe">
+              <label>RECIPE&nbsp;ID</label>
+              <input id="in-recipe" placeholder="finance/screen-reimbursement" />
+            </div>
+            <div class="field-row">
+              <div class="field"><label>COMMITTEE</label><input id="in-committee" placeholder="finance" /></div>
+              <div class="field"><label>IDENTITY</label><input id="in-identity" placeholder="you@scottylabs.org" /></div>
+            </div>
+            <div class="field-row">
+              <label class="check"><input type="checkbox" id="in-hard" /> <span>ESCALATE&nbsp;(hard&nbsp;task&nbsp;→&nbsp;Opus)</span></label>
+            </div>
+            <button id="submit" class="run">EXECUTE&nbsp;<span class="run-arrow">▸</span></button>
+            <p class="composer-note">Runs through the gateway. High-impact tools pause for your approval below.</p>
+          </div>
+
+          <div class="terminal panel">
+            <div class="term-head">
+              <span class="term-dots"><i></i><i></i><i></i></span>
+              <span id="term-title" class="term-title">agent://idle</span>
+              <span id="term-state" class="term-state">READY</span>
+            </div>
+            <div id="stream" class="stream">
+              <div class="stream-empty">
+                <pre class="ascii">      ◢◤  ScottyLabs Agent
+   ────────────────────────
+   awaiting task submission
+              </pre>
+              </div>
+            </div>
+            <div id="term-approve" class="term-approve hidden">
+              <div class="ta-text">⚑ HIGH-IMPACT ACTION <b id="ta-tool"></b> AWAITS APPROVAL</div>
+              <div class="ta-btns">
+                <button id="ta-deny" class="btn-deny">DENY</button>
+                <button id="ta-approve" class="btn-approve">APPROVE&nbsp;&amp;&nbsp;RESUME</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>

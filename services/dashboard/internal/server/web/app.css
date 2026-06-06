@@ -1,0 +1,238 @@
+/* ScottyLabs Agent Ops — mission-control terminal. Amber CRT on ink, monospace telemetry. */
+:root{
+  --ink:#07080a; --panel:#0d0f13; --panel-2:#121419; --panel-3:#171a21;
+  --line:#1b2028; --line-2:#252b35;
+  --text:#d8dce2; --muted:#7e8794; --faint:#525a66;
+  --amber:#ffb000; --amber-2:#ffcf66; --amber-dim:#7a5a14;
+  --green:#41c463; --red:#ff5b5b; --blue:#5aa6ff; --violet:#b08bff;
+  --glow:0 0 0 1px rgba(255,176,0,.18), 0 0 22px -6px rgba(255,176,0,.45);
+  --radius:3px;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--ink); color:var(--text); font-family:var(--mono);
+  font-size:13px; line-height:1.5; letter-spacing:.01em; overflow:hidden;
+  background-image:
+    radial-gradient(900px 520px at 78% -8%, rgba(255,176,0,.10), transparent 60%),
+    radial-gradient(700px 600px at 0% 110%, rgba(90,166,255,.05), transparent 55%),
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:auto,auto,42px 42px,42px 42px;
+  background-position:0 0,0 0,-1px -1px,-1px -1px;
+}
+.hidden{display:none !important}
+code{font-family:var(--mono); color:var(--amber-2); background:rgba(255,176,0,.07); padding:1px 5px; border-radius:2px}
+b{font-weight:600}
+
+/* texture overlays */
+.scanlines{position:fixed; inset:0; pointer-events:none; z-index:60; opacity:.35;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.0) 0 2px, rgba(0,0,0,.22) 2px 3px); mix-blend-mode:multiply}
+.grain{position:fixed; inset:0; pointer-events:none; z-index:61; opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+
+/* ---------- login ---------- */
+.login{position:fixed; inset:0; z-index:50; display:grid; place-items:center;
+  background:radial-gradient(700px 500px at 50% 30%, rgba(255,176,0,.07), transparent), var(--ink)}
+.login-card{width:min(420px,90vw); border:1px solid var(--line-2); background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  padding:38px 34px; border-radius:var(--radius); box-shadow:0 40px 120px -40px #000; animation:rise .6s ease both}
+.login-mark{color:var(--amber); letter-spacing:.32em; font-size:11px; margin-bottom:18px}
+.login-card h1{font-size:40px; font-weight:700; margin:0 0 6px; letter-spacing:.04em}
+.login-sub{color:var(--muted); margin:0 0 26px; font-size:12px; letter-spacing:.1em}
+#login-form{display:flex; flex-direction:column; gap:12px}
+#login-token{background:var(--ink); border:1px solid var(--line-2); color:var(--text); font-family:var(--mono);
+  padding:14px 16px; border-radius:var(--radius); letter-spacing:.28em; outline:none}
+#login-token:focus{border-color:var(--amber); box-shadow:var(--glow)}
+#login-form button{background:var(--amber); color:#161200; border:0; font-family:var(--mono); font-weight:700;
+  letter-spacing:.16em; padding:14px; border-radius:var(--radius); cursor:pointer; transition:.15s}
+#login-form button:hover{background:var(--amber-2); box-shadow:var(--glow)}
+.login-err{color:var(--red); min-height:16px; font-size:12px; letter-spacing:.06em; margin:14px 0 0}
+
+/* ---------- status bar ---------- */
+.statusbar{height:46px; display:flex; align-items:center; justify-content:space-between; padding:0 18px;
+  border-bottom:1px solid var(--line); background:linear-gradient(180deg,var(--panel-2),rgba(13,15,19,.7)); backdrop-filter:blur(6px); position:relative; z-index:20}
+.sb-left{display:flex; align-items:center; gap:10px}
+.logo{color:var(--amber); font-size:15px; filter:drop-shadow(0 0 6px rgba(255,176,0,.6))}
+.logo-text{font-weight:700; letter-spacing:.22em; font-size:12px}
+.logo-sub{color:var(--faint); font-weight:400; margin-left:6px; letter-spacing:.18em}
+.sys{display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:.22em; color:var(--green)}
+.sys.warn{color:var(--amber)} .sys.bad{color:var(--red)}
+.sb-right{display:flex; align-items:center; gap:16px; font-size:11px; letter-spacing:.14em; color:var(--muted)}
+.kv{display:inline-flex; align-items:center; gap:7px}
+.kv b{color:var(--faint); font-weight:500}
+.clock{color:var(--amber-2); letter-spacing:.18em; font-variant-numeric:tabular-nums}
+.devbadge{background:var(--amber-dim); color:var(--amber-2); padding:2px 8px; border-radius:2px; letter-spacing:.2em; font-size:10px}
+.dot{width:7px; height:7px; border-radius:50%; background:var(--faint); display:inline-block; flex:0 0 auto}
+.dot.ok{background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 2.4s ease-in-out infinite}
+.dot.bad{background:var(--red); box-shadow:0 0 8px var(--red)}
+
+/* ---------- layout ---------- */
+.layout{display:flex; height:calc(100vh - 46px)}
+.rail{width:208px; flex:0 0 auto; border-right:1px solid var(--line); padding:18px 12px; display:flex; flex-direction:column; gap:4px;
+  background:linear-gradient(180deg, rgba(18,20,25,.5), transparent)}
+.nav{display:flex; align-items:center; gap:11px; background:transparent; border:1px solid transparent; color:var(--muted);
+  font-family:var(--mono); font-size:12px; letter-spacing:.14em; padding:11px 12px; border-radius:var(--radius); cursor:pointer; text-align:left; transition:.14s; position:relative}
+.nav .gly{color:var(--faint); width:14px; text-align:center; transition:.14s}
+.nav:hover{color:var(--text); border-color:var(--line-2); background:var(--panel)}
+.nav.active{color:var(--amber); background:linear-gradient(90deg, rgba(255,176,0,.08), transparent); border-color:rgba(255,176,0,.22)}
+.nav.active .gly{color:var(--amber); filter:drop-shadow(0 0 5px rgba(255,176,0,.7))}
+.nav.active::before{content:''; position:absolute; left:-12px; top:8px; bottom:8px; width:2px; background:var(--amber); box-shadow:0 0 10px var(--amber)}
+.badge{margin-left:auto; background:var(--red); color:#fff; border-radius:10px; padding:1px 7px; font-size:10px; letter-spacing:.05em}
+.rail-foot{margin-top:auto; color:var(--faint); font-size:10px; letter-spacing:.12em; line-height:1.7; padding:10px 12px; border-top:1px solid var(--line)}
+.rail-org{color:var(--muted)}
+
+.main{flex:1; overflow-y:auto; padding:26px 30px 60px; position:relative; z-index:1}
+.view{display:none; animation:rise .45s ease both}
+.view.active{display:block}
+.view-head{margin-bottom:22px}
+.view-head h2{margin:0; font-size:22px; font-weight:700; letter-spacing:.16em}
+.view-sub{color:var(--muted); font-size:12px; letter-spacing:.04em; font-family:var(--sans)}
+
+/* ---------- telemetry ---------- */
+.telemetry{display:grid; grid-template-columns:repeat(auto-fit,minmax(176px,1fr)); gap:14px; margin-bottom:22px}
+.tcard{border:1px solid var(--line); background:linear-gradient(180deg,var(--panel-2),var(--panel)); border-radius:var(--radius);
+  padding:16px 18px; position:relative; overflow:hidden; animation:rise .5s ease both}
+.tcard::after{content:''; position:absolute; right:-30px; top:-30px; width:90px; height:90px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,176,0,.10), transparent 70%)}
+.tcard .lbl{color:var(--faint); font-size:10px; letter-spacing:.22em}
+.tcard .val{font-size:36px; font-weight:600; margin:6px 0 2px; letter-spacing:.02em; font-variant-numeric:tabular-nums; color:var(--text)}
+.tcard .val.amber{color:var(--amber); text-shadow:0 0 18px rgba(255,176,0,.35)}
+.tcard .val.red{color:var(--red)} .tcard .val.green{color:var(--green)}
+.tcard .sub{color:var(--muted); font-size:11px; letter-spacing:.08em}
+.tcard .spark{display:flex; gap:2px; align-items:flex-end; height:22px; margin-top:8px}
+.tcard .spark i{flex:1; background:linear-gradient(180deg,var(--amber),rgba(255,176,0,.15)); opacity:.55; border-radius:1px}
+
+.ov-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+@media(max-width:980px){.ov-grid{grid-template-columns:1fr}}
+
+/* ---------- panels ---------- */
+.panel{border:1px solid var(--line); background:linear-gradient(180deg,var(--panel-2),var(--panel)); border-radius:var(--radius); overflow:hidden}
+.panel-head{display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid var(--line)}
+.panel-head h3{margin:0; font-size:12px; letter-spacing:.2em; color:var(--text)}
+.panel-head .muted, .muted{color:var(--faint); font-size:10px; letter-spacing:.14em}
+
+.sysgrid{padding:6px 4px}
+.sysrow{display:flex; align-items:center; justify-content:space-between; padding:11px 14px; border-bottom:1px solid var(--line)}
+.sysrow:last-child{border-bottom:0}
+.sysrow .name{color:var(--muted); letter-spacing:.08em; display:flex; align-items:center; gap:9px}
+.sysrow .state{font-size:11px; letter-spacing:.14em}
+.state.ok{color:var(--green)} .state.warn{color:var(--amber)} .state.off{color:var(--faint)}
+
+.ministream{padding:6px 0; max-height:300px; overflow-y:auto}
+.mrow{display:grid; grid-template-columns:64px 1fr auto; gap:10px; padding:8px 16px; font-size:11.5px; border-bottom:1px solid rgba(27,32,40,.6); animation:slidein .35s ease both}
+.mrow .t{color:var(--faint)} .mrow .tool{color:var(--text)} .mrow .res{letter-spacing:.06em}
+
+/* ---------- registry ---------- */
+.registry{display:flex; flex-direction:column; gap:12px}
+.srv{border:1px solid var(--line); background:linear-gradient(180deg,var(--panel-2),var(--panel)); border-radius:var(--radius); overflow:hidden; animation:rise .45s ease both}
+.srv-top{display:flex; align-items:center; gap:14px; padding:15px 18px; cursor:pointer}
+.srv-name{font-weight:600; letter-spacing:.05em; font-size:14px}
+.srv-owner{color:var(--faint); font-size:11px; letter-spacing:.08em}
+.lc{font-size:10px; letter-spacing:.16em; padding:3px 9px; border-radius:2px; border:1px solid currentColor}
+.lc.approved{color:var(--green)} .lc.proposed{color:var(--amber)} .lc.deprecated{color:var(--faint)} .lc.disabled{color:var(--red)}
+.srv-spacer{flex:1}
+.chip{font-size:10px; letter-spacing:.1em; color:var(--muted); border:1px solid var(--line-2); padding:3px 8px; border-radius:2px}
+.srv-actions{display:flex; gap:8px; align-items:center}
+.mini{background:var(--panel-3); border:1px solid var(--line-2); color:var(--text); font-family:var(--mono); font-size:10.5px;
+  letter-spacing:.12em; padding:6px 11px; border-radius:2px; cursor:pointer; transition:.14s}
+.mini:hover{border-color:var(--amber); color:var(--amber)}
+.mini.go{border-color:rgba(65,196,99,.4); color:var(--green)} .mini.go:hover{background:rgba(65,196,99,.12)}
+.toggle{width:38px; height:20px; border-radius:11px; background:var(--panel-3); border:1px solid var(--line-2); position:relative; cursor:pointer; transition:.18s}
+.toggle::after{content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:var(--faint); transition:.18s}
+.toggle.on{background:rgba(65,196,99,.18); border-color:var(--green)} .toggle.on::after{left:20px; background:var(--green); box-shadow:0 0 8px var(--green)}
+.srv-tools{border-top:1px solid var(--line); padding:6px 0; display:none}
+.srv.open .srv-tools{display:block}
+.toolrow{display:grid; grid-template-columns:1fr 180px 90px; gap:10px; padding:9px 18px; font-size:11.5px; border-bottom:1px solid rgba(27,32,40,.5)}
+.toolrow:last-child{border-bottom:0}
+.toolrow .scope{color:var(--blue)}
+.imp{font-size:10px; letter-spacing:.12em; text-align:right}
+.imp.read{color:var(--green)} .imp.write{color:var(--amber)} .imp.high{color:var(--red); font-weight:600}
+
+/* ---------- approvals ---------- */
+.approvals{display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:14px}
+.appr{border:1px solid rgba(255,91,91,.3); background:linear-gradient(180deg,rgba(255,91,91,.05),var(--panel)); border-radius:var(--radius); padding:18px; animation:rise .4s ease both}
+.appr .flag{color:var(--red); letter-spacing:.18em; font-size:11px; display:flex; align-items:center; gap:8px; margin-bottom:12px}
+.appr .tool{font-size:16px; font-weight:600; letter-spacing:.04em; margin-bottom:6px}
+.appr .args{background:var(--ink); border:1px solid var(--line); border-radius:2px; padding:10px 12px; font-size:11px; color:var(--muted); margin:10px 0; white-space:pre-wrap; word-break:break-word; max-height:120px; overflow:auto}
+.appr .meta{color:var(--faint); font-size:10.5px; letter-spacing:.08em; margin-bottom:14px}
+.appr-btns{display:flex; gap:10px}
+.btn-deny,.btn-approve{flex:1; font-family:var(--mono); font-weight:600; letter-spacing:.12em; font-size:11px; padding:11px; border-radius:2px; cursor:pointer; transition:.15s; border:1px solid}
+.btn-deny{background:transparent; border-color:var(--line-2); color:var(--muted)} .btn-deny:hover{border-color:var(--red); color:var(--red)}
+.btn-approve{background:rgba(65,196,99,.14); border-color:var(--green); color:var(--green)} .btn-approve:hover{background:var(--green); color:#04110a; box-shadow:0 0 18px -4px var(--green)}
+.empty{color:var(--faint); letter-spacing:.1em; padding:50px; text-align:center; border:1px dashed var(--line); border-radius:var(--radius)}
+.empty b{color:var(--green)}
+
+/* ---------- audit log ---------- */
+.logwrap{border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; background:var(--panel)}
+.logcols,.lrow{display:grid; grid-template-columns:96px 150px 1fr 220px 56px; gap:14px; padding:9px 18px; font-size:11.5px}
+.logcols{color:var(--faint); letter-spacing:.16em; font-size:10px; border-bottom:1px solid var(--line); background:var(--panel-2)}
+.log{max-height:calc(100vh - 260px); overflow-y:auto}
+.lrow{border-bottom:1px solid rgba(27,32,40,.55); animation:slidein .3s ease both}
+.lrow:hover{background:rgba(255,176,0,.03)}
+.lrow .t{color:var(--faint); font-variant-numeric:tabular-nums}
+.lrow .ac{color:var(--muted)} .lrow .tl{color:var(--text)} .lrow .ms{color:var(--faint); text-align:right; font-variant-numeric:tabular-nums}
+.r-ok{color:var(--green)} .r-deny{color:var(--red)} .r-gate{color:var(--amber)} .r-err{color:var(--red)} .r-other{color:var(--muted)}
+
+/* ---------- console ---------- */
+.console{display:grid; grid-template-columns:340px 1fr; gap:16px; height:calc(100vh - 200px)}
+@media(max-width:980px){.console{grid-template-columns:1fr; height:auto}}
+.composer{padding:0 0 16px; align-self:start}
+.field{padding:14px 16px 0} .field-row{display:flex; gap:0; padding:0}
+.field-row .field{flex:1}
+.field label,.check{display:block; color:var(--faint); font-size:10px; letter-spacing:.18em; margin-bottom:7px}
+.field input,.field textarea{width:100%; background:var(--ink); border:1px solid var(--line-2); color:var(--text); font-family:var(--mono);
+  font-size:12px; padding:10px 12px; border-radius:2px; outline:none; resize:vertical}
+.field input:focus,.field textarea:focus{border-color:var(--amber); box-shadow:var(--glow)}
+.seg{display:flex; border:1px solid var(--line-2); border-radius:2px; overflow:hidden}
+.seg button{flex:1; background:var(--ink); border:0; color:var(--muted); font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; padding:9px; cursor:pointer}
+.seg button.seg-on{background:rgba(255,176,0,.12); color:var(--amber)}
+.check{display:flex; align-items:center; gap:9px; margin:14px 16px 0; cursor:pointer; color:var(--muted)}
+.check input{width:auto; accent-color:var(--amber)}
+.run{margin:18px 16px 0; width:calc(100% - 32px); background:var(--amber); color:#161200; border:0; font-family:var(--mono); font-weight:700;
+  letter-spacing:.16em; padding:13px; border-radius:2px; cursor:pointer; transition:.15s; font-size:12px}
+.run:hover{background:var(--amber-2); box-shadow:var(--glow)} .run:disabled{opacity:.5; cursor:not-allowed}
+.run-arrow{margin-left:4px}
+.composer-note{color:var(--faint); font-size:10.5px; letter-spacing:.04em; padding:14px 16px 0; font-family:var(--sans); line-height:1.6}
+
+.terminal{display:flex; flex-direction:column; min-height:380px; background:linear-gradient(180deg,#0a0c10,#070809)}
+.term-head{display:flex; align-items:center; gap:12px; padding:10px 14px; border-bottom:1px solid var(--line)}
+.term-dots{display:flex; gap:6px} .term-dots i{width:9px; height:9px; border-radius:50%; background:var(--line-2)}
+.term-dots i:nth-child(1){background:#ff5f57} .term-dots i:nth-child(2){background:#febc2e} .term-dots i:nth-child(3){background:#28c840}
+.term-title{color:var(--muted); font-size:11px; letter-spacing:.06em}
+.term-state{margin-left:auto; font-size:10px; letter-spacing:.18em; color:var(--faint); border:1px solid var(--line-2); padding:3px 9px; border-radius:2px}
+.term-state.run{color:var(--amber); border-color:var(--amber-dim)} .term-state.wait{color:var(--red); border-color:rgba(255,91,91,.4)} .term-state.done{color:var(--green); border-color:rgba(65,196,99,.4)}
+.stream{flex:1; overflow-y:auto; padding:16px 18px; font-size:12.5px; line-height:1.7}
+.stream-empty{display:grid; place-items:center; height:100%; color:var(--faint)}
+.ascii{color:var(--amber-dim); font-size:12px; line-height:1.4; text-align:center}
+.evt{margin-bottom:5px; display:flex; gap:10px; animation:slidein .25s ease both}
+.evt .pre{color:var(--faint); flex:0 0 auto}
+.evt.tool .pre{color:var(--blue)} .evt.tool .txt{color:var(--blue)}
+.evt.approval .pre,.evt.approval .txt{color:var(--red)}
+.evt.output .pre{color:var(--green)} .evt.output .txt{color:var(--text)}
+.evt.error .pre,.evt.error .txt{color:var(--red)}
+.evt.status .txt{color:var(--muted)}
+.evt.done .pre,.evt.done .txt{color:var(--green)}
+.term-cursor::after{content:'▋'; color:var(--amber); animation:blink 1s step-end infinite; margin-left:2px}
+.term-approve{border-top:1px solid rgba(255,91,91,.4); background:rgba(255,91,91,.06); padding:14px 18px; display:flex; align-items:center; gap:16px}
+.ta-text{color:var(--red); font-size:11.5px; letter-spacing:.06em} .ta-text b{color:var(--amber-2)}
+.ta-btns{margin-left:auto; display:flex; gap:10px}
+
+/* toast */
+.toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:80; background:var(--panel-3); border:1px solid var(--line-2);
+  color:var(--text); padding:12px 20px; border-radius:var(--radius); font-size:12px; letter-spacing:.06em; box-shadow:0 20px 50px -20px #000; animation:rise .3s ease both}
+.toast.good{border-color:var(--green); color:var(--green)} .toast.bad{border-color:var(--red); color:var(--red)}
+
+/* cursor + animations */
+.cursor::after{content:'▋'; color:var(--amber); animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes rise{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
+@keyframes slidein{from{opacity:0; transform:translateX(-8px)}to{opacity:1; transform:none}}
+
+/* scrollbars */
+::-webkit-scrollbar{width:10px; height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-2); border-radius:6px; border:2px solid var(--ink)}
+::-webkit-scrollbar-thumb:hover{background:var(--amber-dim)}
