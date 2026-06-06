@@ -1,0 +1,7 @@
+version: 1
+title: Hard reasoning task
+description: A recipe that pins a stronger model.
+owner: platform-team
+model: anthropic/claude-opus
+instructions: |
+  Do the hard thing.
