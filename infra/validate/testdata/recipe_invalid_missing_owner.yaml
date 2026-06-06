@@ -1,0 +1,6 @@
+# Invalid: a recipe must declare an owning committee.
+version: 1
+title: Screen reimbursement requests
+description: Evaluate new reimbursement form responses against finance standards.
+instructions: |
+  Read the sheet and evaluate each row.

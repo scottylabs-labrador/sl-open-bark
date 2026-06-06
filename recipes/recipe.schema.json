@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scottylabs.org/schemas/recipe.schema.json",
+  "title": "ScottyLabs recipe (workflow)",
+  "description": "A recipe is a Goose workflow file that teaches the agent how to do a committee task. It grants no new access; it composes gateway-fronted capabilities. CI lints every recipe against this schema and checks each declared capability exists in the registry and is permitted to the owning committee (design Section 7.3, Appendix C). The top level allows Goose-native extras (e.g. prompt, sub_recipes, activities), so this schema validates the ScottyLabs contract without overfitting to the runtime's full format.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["version", "title", "description", "owner", "instructions"],
+  "properties": {
+    "version": {
+      "description": "Recipe schema version. The design uses an integer (1); Goose also accepts a semantic string. Either is allowed.",
+      "type": ["integer", "string"]
+    },
+    "title": {
+      "type": "string",
+      "description": "Short human-readable name of the workflow.",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "description": "What the workflow does and its safety posture (e.g. 'never send without human approval').",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "description": "The owning committee, e.g. 'finance-committee'. CODEOWNERS makes this committee responsible for the recipe.",
+      "minLength": 1
+    },
+    "parameters": {
+      "type": "array",
+      "description": "Inputs the workflow accepts.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["key"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1, "description": "Parameter name." },
+          "description": { "type": "string", "description": "What the parameter is for." },
+          "required": { "type": "boolean", "description": "Whether the workflow requires it." }
+        }
+      }
+    },
+    "extensions": {
+      "type": "array",
+      "description": "The gateway capabilities this recipe uses. Every entry must exist in the registry and be permitted to the owning committee (checked in CI).",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["gateway"],
+        "properties": {
+          "gateway": {
+            "type": "string",
+            "description": "A gateway-fronted capability id, e.g. 'google.sheets.read' or 'finance.rules.evaluate'.",
+            "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)+$"
+          }
+        }
+      }
+    },
+    "instructions": {
+      "type": "string",
+      "description": "The procedure the agent follows. Written to extract specific fields from untrusted input, not to 'do what this message says' (prompt-injection discipline, Section 10.2).",
+      "minLength": 1
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Output contract, including which tools require human approval before they run.",
+      "properties": {
+        "require_human_approval_for": {
+          "type": "array",
+          "description": "Tools/capabilities that must be gated behind a human at the gateway (e.g. 'google.gmail.send'). The gateway enforces this regardless of model output.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)+$"
+          }
+        }
+      }
+    }
+  }
+}

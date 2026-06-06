@@ -59,6 +59,6 @@ func (a *HTTPAudit) Record(ctx context.Context, actor, action string, payload ma
 		slog.Warn("audit post failed", "err", err)
 		return nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	return nil
 }

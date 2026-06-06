@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scottylabs.org/schemas/mcp-manifest.schema.json",
+  "title": "ScottyLabs MCP server manifest",
+  "description": "The registry contract. The MCP gateway reads each server's manifest.yaml to register it, enforce per-tool scope and impact, gate impact:high behind human approval, and decide which committees may use it (design Section 7.4).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "owner", "description", "endpoint", "tools"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Dotted server identifier, e.g. 'events.booking' or 'scottylabs.example'.",
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)*$"
+    },
+    "owner": {
+      "type": "string",
+      "description": "Committee + maintainer responsible for this server, e.g. 'events-committee'.",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "description": "One- or two-sentence summary of what the server does.",
+      "minLength": 1
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "Where the gateway reaches the server. Path A: http://<name>.railway.internal:8080/mcp (private network). Path B: the server's public Railway URL. Must end in /mcp.",
+      "pattern": "^https?://.+/mcp$"
+    },
+    "transport": {
+      "type": "string",
+      "description": "MCP transport. Every ScottyLabs server speaks Streamable HTTP at a single /mcp endpoint (Section 7.6).",
+      "enum": ["streamable-http"],
+      "default": "streamable-http"
+    },
+    "auth": {
+      "type": "string",
+      "description": "How the gateway authenticates to the server. 'bearer' means the gateway presents MCP_AUTH_TOKEN.",
+      "enum": ["bearer", "none"],
+      "default": "bearer"
+    },
+    "tools": {
+      "type": "array",
+      "description": "Every tool the server exposes. A tool with no declared scope is rejected (fail closed, Section 10.3).",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/tool" }
+    },
+    "allowed_committees": {
+      "type": "array",
+      "description": "Committees whose roles may use this server. The gateway intersects this with per-tool scope.",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "lifecycle": {
+      "type": "string",
+      "description": "Registry state. New servers land in 'proposed' and do nothing live until a maintainer promotes them to 'approved' (Section 7.4, 10.3).",
+      "enum": ["proposed", "approved", "deprecated", "disabled"],
+      "default": "proposed"
+    }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "scope", "impact"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Tool name as exposed over MCP, e.g. 'evaluate_reimbursement'.",
+          "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$"
+        },
+        "scope": {
+          "type": "string",
+          "description": "Capability scope the caller's role must hold, e.g. 'finance.read'. Required — a tool with no scope is rejected.",
+          "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)+$"
+        },
+        "impact": {
+          "type": "string",
+          "description": "read = no external side effect; write = reversible side effect; high = irreversible (send, delete, book, money) and gated behind human approval at the gateway.",
+          "enum": ["read", "write", "high"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+# golangci-lint v2 configuration, applied to every module in the monorepo.
+# The standard linter set (errcheck, govet, ineffassign, staticcheck, unused) is the right baseline
+# for a volunteer codebase: it catches real bugs without drowning contributors in style noise.
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  exclusions:
+    generated: lax
+    rules:
+      # Table-driven tests intentionally ignore some return values.
+      - path: _test\.go
+        linters:
+          - errcheck

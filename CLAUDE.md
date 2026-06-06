@@ -1,7 +1,7 @@
 # CLAUDE.md - ScottyLabs Agent Platform
 
 Repo-wide guidance for Claude Code agents working in this monorepo. Read this first, then read
-the relevant section of `ScottyLabs-Agent-Platform-Design.md` and the work package you are
+the relevant section of `docs/ScottyLabs-Agent-Platform-Design.md` and the work package you are
 assigned in `BUILD-PLAYBOOK.md`.
 
 ## What we are building
@@ -57,6 +57,9 @@ the model is served through **OpenRouter** (OpenAI-compatible API). Hosting is *
 ## How to run things
 
 ```bash
+# The whole monorepo (mirrors CI): format check, vet, lint, tests, schema validation
+make ci
+
 # An MCP server (from its folder)
 go test ./... && go run ./cmd/server
 
@@ -64,7 +67,12 @@ go test ./... && go run ./cmd/server
 gofmt -l . && go vet ./...
 
 # Recipes are data; validate against the schema in docs/recipe-spec.md (CI does this too)
+make validate
 ```
+
+This is a **multi-module** monorepo: each MCP server and service is its own Go module so it can
+be deployed independently (Section 7.6, Path B). The `Makefile` and CI discover every `go.mod`
+automatically, so adding a module needs no tooling changes.
 
 ## Definition of done (every PR)
 
@@ -81,8 +89,8 @@ gofmt -l . && go vet ./...
 - `gateway/` MCP gateway config, policy, registry
 - `recipes/<committee>/` workflows; `recipes/shared/` reusable subrecipes
 - `mcp-servers/<name>/` capabilities; `mcp-servers/_template/` the starter
-- `docs/` CONTRIBUTING, SECURITY, recipe-spec, mcp-hosting-on-railway
-- `infra/` Railway config and deploy scripts
+- `docs/` CONTRIBUTING, SECURITY, recipe-spec, mcp-server-checklist, mcp-hosting-on-railway
+- `infra/` Railway config, deploy scripts, and CI validators
 
 When in doubt, prefer the smallest change that satisfies the work package, keep the core thin,
 and put new behavior at the edges (a recipe or an MCP server), not in bespoke core logic.
