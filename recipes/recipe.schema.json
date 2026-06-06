@@ -51,7 +51,7 @@
           "gateway": {
             "type": "string",
             "description": "A gateway-fronted capability id, e.g. 'google.sheets.read' or 'finance.rules.evaluate'.",
-            "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)+$"
+            "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
           }
         }
       }
@@ -71,7 +71,7 @@
           "description": "Tools/capabilities that must be gated behind a human at the gateway (e.g. 'google.gmail.send'). The gateway enforces this regardless of model output.",
           "items": {
             "type": "string",
-            "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)+$"
+            "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
           }
         }
       }

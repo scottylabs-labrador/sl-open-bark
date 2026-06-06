@@ -1,0 +1,36 @@
+version: 1
+title: Draft, confirm, then act
+description: >
+  Reusable subrecipe for any irreversible action: draft the artifact, post it for human approval,
+  and act ONLY after a human approves. Centralizing this means every workflow that sends, books, or
+  deletes shares the same human-in-the-loop shape and gets fixes in one place (design Section 9.6).
+owner: finance-committee
+
+parameters:
+  - key: draft_tool
+    description: The gateway capability that creates the draft (e.g. google.workspace.gmail_draft)
+    required: true
+  - key: act_tool
+    description: The irreversible gateway capability, gated impact:high (e.g. google.workspace.gmail_send)
+    required: true
+  - key: summary
+    description: One-line human-readable summary of what will happen on approval
+    required: true
+
+extensions:
+  - gateway: google.workspace.gmail_draft
+
+instructions: |
+  1. Create the draft with `draft_tool`. Do not perform the irreversible action.
+  2. Post the draft and `summary` for human review with an approval block
+     (Approve / Review / Cancel). Nothing happens until a human acts.
+  3. On Approve: perform `act_tool`. It is impact:high, so the gateway independently requires a
+     recorded approval — this subrecipe never bypasses that gate.
+  4. On Cancel or no decision: do nothing. Leave the draft for a human.
+
+  This subrecipe never moves money and never takes an irreversible action without an explicit,
+  recorded human approval.
+
+response:
+  require_human_approval_for:
+    - google.workspace.gmail_send
