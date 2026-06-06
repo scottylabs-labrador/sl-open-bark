@@ -15,12 +15,12 @@ import (
 // ad-hoc goal) is set. Identity and Committee scope the work; HardTask hints that the model should
 // escalate to a stronger model.
 type TaskRequest struct {
-	RecipeID   string
-	InlineGoal string
-	Params     map[string]string
-	Identity   string
-	Committee  string
-	HardTask   bool
+	RecipeID   string            `json:"recipe_id,omitempty"`
+	InlineGoal string            `json:"inline_goal,omitempty"`
+	Params     map[string]string `json:"params,omitempty"`
+	Identity   string            `json:"identity,omitempty"`
+	Committee  string            `json:"committee,omitempty"`
+	HardTask   bool              `json:"hard_task,omitempty"`
 }
 
 // EventKind enumerates the events a task streams.
