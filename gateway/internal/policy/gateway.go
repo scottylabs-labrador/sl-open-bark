@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/scottylabs/scottylabs-agent/gateway/internal/limits"
 	"github.com/scottylabs/scottylabs-agent/services/session-memory/store"
 )
 
@@ -45,6 +46,8 @@ var (
 	ErrUnknownTool = errors.New("gateway: unknown tool")
 	// ErrUnauthorized is returned when the caller's roles do not permit the tool.
 	ErrUnauthorized = errors.New("gateway: caller not authorized for tool")
+	// ErrRateLimited is returned when a caller exceeds the per-committee or global rate limit.
+	ErrRateLimited = errors.New("gateway: rate limited")
 )
 
 // ApprovalRequiredError is returned when an impact:high tool is called without an approved
@@ -77,14 +80,25 @@ type ToolCaller interface {
 
 // Gateway is the policy engine. Construct it with New.
 type Gateway struct {
-	store  Store
-	caller ToolCaller
-	redact func(json.RawMessage) json.RawMessage
+	store   Store
+	caller  ToolCaller
+	redact  func(json.RawMessage) json.RawMessage
+	limiter *limits.Limiter
 }
 
+// Option configures a Gateway.
+type Option func(*Gateway)
+
+// WithLimiter adds per-committee and global rate limiting (design 10.2).
+func WithLimiter(l *limits.Limiter) Option { return func(g *Gateway) { g.limiter = l } }
+
 // New builds a Gateway over a Store and a downstream ToolCaller.
-func New(s Store, c ToolCaller) *Gateway {
-	return &Gateway{store: s, caller: c, redact: RedactArgs}
+func New(s Store, c ToolCaller, opts ...Option) *Gateway {
+	g := &Gateway{store: s, caller: c, redact: RedactArgs}
+	for _, o := range opts {
+		o(g)
+	}
+	return g
 }
 
 // Register adds or updates a server in the registry (it lands 'proposed' until a maintainer
@@ -107,6 +121,15 @@ func (g *Gateway) ListTools(ctx context.Context, id Identity) ([]store.VisibleTo
 	return g.store.ListVisibleTools(ctx, id.Committees)
 }
 
+// rateKey picks the per-committee rate-limit key for a caller: its first committee, falling back to
+// its subject.
+func rateKey(id Identity) string {
+	if len(id.Committees) > 0 {
+		return id.Committees[0]
+	}
+	return id.Subject
+}
+
 // Call authorizes, gates, proxies, and audits a tool invocation:
 //  1. resolve the tool (unknown -> ErrUnknownTool, audited);
 //  2. authorize: server approved+enabled and granted to one of the caller's committees
@@ -116,6 +139,12 @@ func (g *Gateway) ListTools(ctx context.Context, id Identity) ([]store.VisibleTo
 //  4. proxy downstream and audit the outcome (actor, tool, redacted args, result, latency).
 func (g *Gateway) Call(ctx context.Context, req CallRequest) (CallResult, error) {
 	start := time.Now()
+
+	// Cost/rate control (design 10.2): a runaway or abused caller hits a wall before any work.
+	if g.limiter != nil && !g.limiter.Allow(rateKey(req.Identity)) {
+		g.audit(ctx, req, "denied: rate limited", start)
+		return CallResult{}, ErrRateLimited
+	}
 
 	binding, err := g.store.ResolveTool(ctx, req.ServerName, req.ToolName)
 	if errors.Is(err, store.ErrNotFound) {
