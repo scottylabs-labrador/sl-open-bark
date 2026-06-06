@@ -19,8 +19,8 @@ type Config struct {
 func LoadConfig() Config {
 	return Config{
 		Provider:         firstNonEmpty(os.Getenv("GOOSE_PROVIDER"), "openrouter"),
-		Model:            firstNonEmpty(os.Getenv("GOOSE_MODEL"), "anthropic/claude-sonnet"),
-		EscalationModel:  firstNonEmpty(os.Getenv("GOOSE_ESCALATION_MODEL"), "anthropic/claude-opus"),
+		Model:            firstNonEmpty(os.Getenv("GOOSE_MODEL"), "anthropic/claude-sonnet-4.6"),
+		EscalationModel:  firstNonEmpty(os.Getenv("GOOSE_ESCALATION_MODEL"), "anthropic/claude-opus-4.8"),
 		OpenRouterAPIKey: os.Getenv("OPENROUTER_API_KEY"),
 		GatewayURL:       os.Getenv("GATEWAY_MCP_URL"),
 		GatewayToken:     os.Getenv("GATEWAY_SERVICE_TOKEN"),
